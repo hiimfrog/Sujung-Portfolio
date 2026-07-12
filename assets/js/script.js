@@ -48,19 +48,19 @@
       return /\.(mp4|webm|ogg)(\?.*)?$/i.test(src || '');
     }
 
-    function createMediaMarkup(src, alt) {
-      if (!src) return alt || 'Preview';
+    function createMediaMarkup(src, alt, muted = true) {
+  if (!src) return alt || 'Preview';
 
-      if (isVideoFile(src)) {
-        return `
-          <video autoplay muted loop playsinline preload="metadata" aria-label="${alt}">
-            <source src="${src}">
-          </video>
-        `;
-      }
+  if (isVideoFile(src)) {
+    return `
+      <video autoplay ${muted ? 'muted' : ''} loop playsinline preload="metadata" aria-label="${alt}">
+        <source src="${src}">
+      </video>
+    `;
+  }
 
-      return `<img src="${src}" alt="${alt}">`;
-    }
+  return `<img src="${src}" alt="${alt}">`;
+}
 
     // poster / banner는 data-modal-media 속성으로 썸네일과 다른 모달 전용 이미지를 지정할 수 있습니다.
     function getCardData(source) {
@@ -200,23 +200,27 @@
       modalPageIndicator.textContent = `${currentModalIndex + 1} / ${total}`;
     }
 
-    function renderModalHeroByIndex(index) {
-      if (!currentModalImages.length) {
-        modalHeroMedia.classList.remove('is-swipe-ready');
-        modalHeroMedia.textContent = currentModalTitle;
-        updateModalControls();
-        return;
-      }
+function renderModalHeroByIndex(index) {
+  if (!currentModalImages.length) {
+    modalHeroMedia.classList.remove('is-swipe-ready');
+    modalHeroMedia.textContent = currentModalTitle;
+    updateModalControls();
+    return;
+  }
 
-      currentModalIndex = Math.max(0, Math.min(index, currentModalImages.length - 1));
-      modalHeroMedia.classList.add('is-swipe-ready');
-      modalHeroMedia.innerHTML = createMediaMarkup(
-        currentModalImages[currentModalIndex],
-        `${currentModalTitle} ${currentModalIndex + 1}`
-      );
-      updateModalThumbActiveState();
-      updateModalControls();
-    }
+  currentModalIndex = Math.max(0, Math.min(index, currentModalImages.length - 1));
+  modalHeroMedia.classList.add('is-swipe-ready');
+  
+  // 🌟 세 번째 인자로 false를 주어 모달 안에서는 소리가 나게 합니다.
+  modalHeroMedia.innerHTML = createMediaMarkup(
+    currentModalImages[currentModalIndex],
+    `${currentModalTitle} ${currentModalIndex + 1}`,
+    false 
+  );
+  
+  updateModalThumbActiveState();
+  updateModalControls();
+}
 
     function goToModalSlide(index) {
       renderModalHeroByIndex(index);
@@ -286,14 +290,18 @@
     }
 
     function closeModal() {
-      modal.classList.remove('is-open');
-      modal.setAttribute('aria-hidden', 'true');
-      document.body.classList.remove('modal-open');
-      modalDialog.classList.remove('modal-type-poster', 'modal-type-banner', 'modal-type-cardnews', 'modal-type-reels', 'modal-type-default');
-      modalDialog.style.removeProperty('--modal-media-ratio');
-      modalHeroMedia.style.removeProperty('aspect-ratio');
-      if (lastFocusedElement) lastFocusedElement.focus();
-    }
+ if (modalHeroMedia) {
+    modalHeroMedia.innerHTML = ''; 
+  }
+
+  modal.classList.remove('is-open');
+  modal.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('modal-open');
+  modalDialog.classList.remove('modal-type-poster', 'modal-type-banner', 'modal-type-cardnews', 'modal-type-reels', 'modal-type-default');
+  modalDialog.style.removeProperty('--modal-media-ratio');
+  modalHeroMedia.style.removeProperty('aspect-ratio');
+  if (lastFocusedElement) lastFocusedElement.focus();
+}
 
     const setHeaderState = () => {
       if (window.scrollY > 20) siteHeader.classList.add('scrolled');
